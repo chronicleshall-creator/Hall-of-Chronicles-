@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biblioteca Virtual</title>
+  <style>
+    /* ======== MENÚ LATERAL ======== */
+    .sidebar {
+      height: 100%;
+      width: 0; /* Oculto por defecto */
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #240046;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 60px;
+      z-index: 1000;
+    }
+
+    .sidebar a {
+      padding: 10px 15px;
+      text-decoration: none;
+      font-size: 18px;
+      color: #E0AAFF;
+      display: block;
+      transition: 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: #5A189A;
+    }
+
+    .sidebar .closebtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 30px;
+      color: #fff;
+    }
+
+    .menu-btn {
+  font-size: 25px;
+  cursor: pointer;
+  background: #3C096C;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  position: fixed;
+  top: 45px;       /* debajo del buscador */
+  right: 20px;     /* a la derecha */
+  z-index: 1100;
+  border-radius: 5px;
+}
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #10002B;
+      color: #FFFFFF;
+    }
+
+    header {
+      background-color: #3C096C;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    header img {
+      height: 80px;
+      width: 80px;
+      object-fit: contain;
+      margin-right: 20px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: #E0AAFF;
+    }
+
+    #buscador-container {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+    }
+
+    #buscador {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: none;
+      background: #240046;
+      color: white;
+    }
+    nav {
+      display: flex;
+      background-color: #240046;
+      justify-content: center;
+      gap: 15px;
+      padding: 10px 0;
+    }
+    nav button {
+      background-color: #5A189A;
+      color: #E0AAFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    nav button:hover {
+      background-color: #7B2CBF;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .book-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .book-item {
+      background-color: #9D4EDD;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .book-item a {
+      color: #10002B;
+      text-decoration: none;
+    }
+    .genre-title {
+      color: #E0AAFF;
+      margin-bottom: 15px;
+    }
+    #buscador-container {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+    }
+    #buscador {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: none;
+      background: #240046;
+      color: white;
+    }
+    footer {
+      background-color: #3C096C;
+      padding: 15px;
+      text-align: center;
+      color: #E0AAFF;
+      margin-top: 30px;
+    }
+    blockquote {
+      font-style: italic;
+      color: #E0AAFF;
+      text-align: center;
+      background: #240046;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    /* Estilos para el zoom de imagen */
+    .book-item img.zoom-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+      cursor: zoom-in;
+    }
+
+    .book-item img.zoom-img:hover {
+      transform: scale(1.1);
+    }
+
+    /* Modal para imagen ampliada */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      padding-top: 60px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.9);
+    }
+
+    .modal-content {
+      margin: auto;
+      display: block;
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 10px;
+    }
+
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 35px;
+      color: #fff;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+
+<!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+</head>
+<body>
+  <header>
+   <!-- Botón hamburguesa dentro del header -->
+    <button class="menu-btn" onclick="openMenu()">☰</button>
+
+    <img src="imagenes de libros/unnamed.jpg" alt="Logo Biblioteca" />
+    <h1>Biblioteca Virtual</h1>
+    <div id="buscador-container">
+      <input type="text" id="buscador" placeholder="🔍 Buscar..." onkeyup="buscarLibro()">
+    </div>
+  </header>
+
+    <div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeMenu()">×</a>
+
+    <div id="loginLinks">
+      <a href="javascript:void(0)" onclick="loginEmail()">📧 Iniciar con Correo</a>
+      <a href="javascript:void(0)" onclick="loginGoogle()">🔵 Iniciar con Google</a>
+      <a href="javascript:void(0)" onclick="loginFacebook()">🔷 Iniciar con Facebook</a>
+    </div>
+
+    <a href="javascript:void(0)" id="logoutLink" onclick="logout()" style="display:none;">🚪 Cerrar Sesión</a>
+    <a href="profile.html" id="profileLink" style="display:none;">👤 Mi Perfil</a>
+    <a href="#" onclick="showTab('club de Lectura')">💬 Club de Lectura</a>
+  </div>
+
+  <nav>
+    <button onclick="showTab('inicio')">Inicio</button>
+    <button onclick="showTab('drama')">Drama</button>
+    <button onclick="showTab('suspenso')">Suspenso</button>
+    <button onclick="showTab('anime')">Anime</button>
+    <button onclick="showTab('belico')">Bélico</button>
+    <button onclick="showTab('Distopía')">Distopía</button>
+    <button onclick="showTab('Infantil')">Infantil</button>
+    <button onclick="showTab('Misterio')">Misterio</button>
+    <button onclick="showTab('club de Lectura')">Club de Lectura</button>
+  </nav>
+
+  <div id="inicio" class="tab-content active">
+    <blockquote id="frase">"Cargando frase..."</blockquote>
+
+    <h2 class="genre-title">📈 Más Leídos</h2>
+    <div class="book-list" id="lista-libros">
+      <div class="book-item">
+        <h4>El Psicoanalista</h4>
+        <img src="imagenes de libros/El Psicoanalista.jpg" alt="El Psicoanalista" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El Psicoanalista.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Diario 3 Gravity Falls</h4>
+        <img src="imagenes de libros/Diario 3.jpg" alt="Diario 3 Gravity Falls" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Gravity_Falls_diario 3.pdf" target="_blank">Leer PDF</a>
+      </div>
+    </div>
+
+    <h2 class="genre-title" style="margin-top: 40px;">🎯 Recomendado por edad</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>Para jóvenes: Bajo la misma estrella</h4>
+        <img src="imagenes de libros/Bajo la misma estrella.webp" alt="Bajo la misma estrella" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/bajo_estrella.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Para adultos: 1984</h4>
+        <img src="imagenes de libros/1984.jpg" alt="1984" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/1984.pdf" target="_blank">Leer PDF</a>
+      </div>
+    </div>
+
+    <h2 class="genre-title" style="margin-top: 40px;">🔥 Tendencias</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>La Chica del Tren</h4>
+        <img src="imagenes de libros/La chica del tren.jpg" alt="La Chica del Tren" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/La chica del tren.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Diario 3 Gravity Falls</h4>
+        <img src="imagenes de libros/Diario 3.jpg" alt="Diario 3 Gravity Falls" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Gravity_Falls_diario 3.pdf" target="_blank">Leer PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ejemplo para Drama -->
+  <div id="drama" class="tab-content">
+    <h2 class="genre-title">Drama</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>Cien años de soledad</h4>
+        <img src="imagenes de libros/cien años de soledad.webp" alt="Cien años de soledad" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Cien años de soledad.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Bajo la misma estrella</h4>
+        <img src="imagenes de libros/Bajo la misma estrella.webp" alt="Bajo la misma estrella" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Bajo-la-misma-Estrella.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>El olvido que seremos</h4>
+        <img src="imagenes de libros/El olvido que seremos.jpg" alt="El olvido que seremos" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El_olvido_que_seremos_-_Hector_Abad_Faci_copia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Otra version de ti</h4>
+        <img src="imagenes de libros/Otra version de ti.jpg" alt="Otra version de ti" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Otra_version_de_ti_copia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La Divina Comedia</h4>
+        <img src="imagenes de libros/Divina comedia.jpg" alt="La Divina Comedia" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Divina comedia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>A Traves De Mi Ventana</h4>
+        <img src="imagenes de libros/a traves.jpg" alt="A Traves De Mi Ventana" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/a_traves_de_mi_ventana.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+    <h4>El Alquimista</h4>
+    <img src="imagenes de libros/EL alquimista.jpg" alt="El Alquimista" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/El Alquimista Autor Paulo Coelho.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>El Amor en los Tiempos del Cólera</h4>
+    <img src="imagenes de libros/El amor en los tiempos del colera.jpg" alt="El Amor en los Tiempos del Cólera" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/El Amor en Tiempo de Cólera Autor Gabriel García Márquez.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>El Principito</h4>
+    <img src="imagenes de libros/El principito.jpg" alt="El Principito" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/El Principito Autor Antoine de Saint-Exupéry.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>Rayuela</h4>
+    <img src="imagenes de libros/rayuela.jpg" alt="Rayuela" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/Rayuela Autor Julio Cortazar.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>Orgullo y Prejuicio</h4>
+    <img src="imagenes de libros/Orgullo y prejuicio.jpg" alt="Orgullo y Prejuicio" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/orgullo_y_prejuicio.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>El Poder de las Palabras</h4>
+    <img src="imagenes de libros/El poder las palabras.jpg" alt="El Poder de las Palabras" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/el poder de las palabras.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>En el Amor y en la Guerra</h4>
+    <img src="imagenes de libros/en el amor y la guerra.jpg" alt="En el Amor y en la Guerra" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/en el amor y en la guerra.pdf" target="_blank">Leer PDF</a>
+</div>
+    </div>
+  </div>
+
+  <!-- Agrega imágenes de forma similar en las demás categorías -->
+  <div id="suspenso" class="tab-content">
+    <h2 class="genre-title">Suspenso</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>El Código Da Vinci</h4>
+        <img src="imagenes de libros/el codigo da vinci.jpg" alt="El Código Da Vinci" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El codigo Da Vinci.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>El Psicoanalista</h4>
+        <img src="imagenes de libros/El Psicoanalista.jpg" alt="El Psicoanalista" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El Psicoanalista.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La Chica del Tren</h4>
+        <img src="imagenes de libros/La chica del tren.jpg" alt="La Chica del Tren" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/La chica del tren.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La cupula</h4>
+        <img src="imagenes de libros/La cupula.jpg" alt="La cúpula" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/La cupula.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+    <h4>It</h4>
+    <img src="imagenes de libros/it.jpg" alt="It" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/It - Stephen King.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>El Gato Negro</h4>
+    <img src="imagenes de libros/el gato negro.jpg" alt="El Gato Negro" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/El Gato Negro Autor Edgar Allan Poe.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>Manipulación y Psicología Oscura</h4>
+    <img src="imagenes de libros/psicologia oscura.jpg" alt="Manipulación y Psicología Oscura" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/Manipulacion y psicologia-oscura..pdf" target="_blank">Leer PDF</a>
+</div>
+    </div>
+  </div>
+
+  <div id="anime" class="tab-content">
+    <h2 class="genre-title">Anime</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>Blue Lock Tomo I</h4>
+        <img src="imagenes de libros/Blue lock.jpg" alt="Blue Lock Tomo I" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Blue Lock.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Blue Lock Tomo II</h4>
+        <img src="imagenes de libros/Blue lock.jpg" alt="Blue Lock Tomo II" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Blue lock 2.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Mushoku Tensei</h4>
+        <img src="imagenes de libros/Mushoku-Tensei-Roxy-datte-Honki-desu.jpg" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Mushoku.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Attack On Titan</h4>
+        <img src="imagenes de libros/Attack On Titan.jpg" alt="Attack On Titan" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/attack on Titan.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 1</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 1 Kimetsu no yaiba.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 2</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 2 kimetsu.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 3</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 3 kimetsu.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 4</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 4 kimetsu.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 5</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 5 kimetsu.PDF" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>kimetsu no yaiba tomo 6</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 6 kimetsu.PDF.PDF" target="_blank">Leer PDF</a>
+      </div><div class="book-item">
+        <h4>kimetsu no yaiba tomo 7</h4>
+        <img src="imagenes de libros/kimetsu no yaiba.webp" alt="Mushoku-Tensei-Roxy-datte-Honki-desu" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/tomo 7 kimetsu.PDF" target="_blank">Leer PDF</a>
+      </div>
+    
+    </div>
+  </div>
+
+  <div id="belico" class="tab-content">
+    <h2 class="genre-title">Bélico</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>Sin novedad en el frente</h4>
+        <img src="imagenes de libros/Sin novedad en el frente.jpg" alt="Sin novedad en el frente" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Sin novedad en el frente.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>El diario de Ana Frank</h4>
+        <img src="imagenes de libros/diario de ana frank.webp" alt="diario de ana frank" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El diario de Ana Frank.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La Guerra No Tiene Rostro De Mujer</h4>
+        <img src="imagenes de libros/La guerra no tiene.jpg" alt="La Guerra No Tiene Rostro De Mujer" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/la-guerra-no-tiene-rostro-de-mujer-historia-de-las-mujeres-del-ejercito-rojo-1_copia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Johnny Cogió Su Fusil</h4>
+        <img src="imagenes de libros/Johnny.jpg" alt="Johnny Cogió Su Fusil" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/johnny-cogio-su-fusil-4-pdf-free.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>El arte de la guerra</h4>
+        <img src="imagenes de libros/el arte de la guerra.jpg" alt="Johnny Cogió Su Fusil" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/El_arte_de_la_guerra-Sun_Tzu.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Por quien doblan las campanas</h4>
+        <img src="imagenes de libros/por-quien-doblan-las-campanas.jpg" alt="Johnny Cogió Su Fusil" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Por quien Doblan las Campanas.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+    <h4>La Ilíada</h4>
+    <img src="imagenes de libros/La iliada.jpg" alt="La Ilíada" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/Iliada.pdf" target="_blank">Leer PDF</a>
+</div>
+    </div>
+  </div>
+
+  <div id="Infantil" class="tab-content">
+    <h2 class="genre-title">Infantil</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>El asno y el caballo</h4>
+        <img src="imagenes de libros/El asno y el caballo.webp" alt="El asno y el caballo" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/burro_y_caballo.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La liebre y la tortuga</h4>
+        <img src="imagenes de libros/La liebre y la tortuga.jpg" alt="La liebre y la tortuga" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/La liebre y la tortuga - Esopo.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Los Tres Cerditod Y El Lobo</h4>
+        <img src="imagenes de libros/Los tres cerditos y el lobo.jpg" alt="Los tres cerditos y el lobo" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Los tres cerditos y el lobo.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La cigarra y la hormiga</h4>
+        <img src="imagenes de libros/Cigarra.jpg" alt="La cigarra y la hormiga" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/cigarra-hormiga_250612_211329.pdf" target="_blank">Leer PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="Distopía" class="tab-content">
+    <h2 class="genre-title">Distopía</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>1984</h4>
+        <img src="imagenes de libros/1984.jpg" alt="1984" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/1984.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Nosotros</h4>
+        <img src="imagenes de libros/nosotros.jpg" alt="Nosotros" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Nosotros.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>The Maze Runner Correr O Morir</h4>
+        <img src="imagenes de libros/correromorir01.jpg" alt="The Maze Runner" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Maze-Runner_correr-o-morir.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La Divina Comedia</h4>
+        <img src="imagenes de libros/Divina comedia.jpg" alt="The Maze Runner" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Divina comedia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+    <h4>Odisea</h4>
+    <img src="imagenes de libros/la odisea.jpg" alt="Odisea" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/Odisea.pdf" target="_blank">Leer PDF</a>
+</div>
+    </div>
+  </div>
+
+  <div id="Misterio" class="tab-content">
+    <h2 class="genre-title">Misterio</h2>
+    <div class="book-list">
+      <div class="book-item">
+        <h4>Las aventuras de sherlock holmes</h4>
+        <img src="imagenes de libros/Las aventuras de sherlock holmes.webp" alt="Las aventuras de Sherlock Holmes" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Las aventuras de Sherlock Holmes.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Diario 3 Gravity Falls</h4>
+        <img src="imagenes de libros/Diario 3.jpg" alt="Diario 3 Gravity Falls" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Gravity_Falls_diario 3.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>Asesinato para principiantes</h4>
+        <img src="imagenes de libros/ASESINATO.jpg" alt="Asesinato para principiantes" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/Asesinato para principiantes - Holly Jackson (1).pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+        <h4>La Sombra Del Viento</h4>
+        <img src="imagenes de libros/La sombra.jpg" alt="La Sombra Del Viento" class="zoom-img" onclick="ampliarImagen(this)">
+        <a href="libros/La-Sombra-Del-Viento_54Y_copia.pdf" target="_blank">Leer PDF</a>
+      </div>
+      <div class="book-item">
+    <h4>Alicia en el País de las Maravillas</h4>
+    <img src="imagenes de libros/Alicia en el pais de las maravillas.jpg" alt="Alicia en el País de las Maravillas" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/alicia en el pais de las maravillas.pdf" target="_blank">Leer PDF</a>
+</div>
+<div class="book-item">
+    <h4>El niño del pijama de rayas</h4>
+    <img src="imagenes de libros/el niño de la pijama de rayas.jpg" alt="El niño del pijama de rayas" class="zoom-img" onclick="ampliarImagen(this)">
+    <a href="libros/el niño dela pijama de rayas.pdf" target="_blank">Leer PDF</a>
+</div>
+    </div>
+  </div>
+
+  <!-- Apartado CLUB DE LECTURA -->
+  <div id="club de Lectura" class="tab-content">
+  <h2 class="genre-title">Club de Lectura</h2>
+  <div style="background:#3C096C;padding:20px;border-radius:10px;max-width:500px;margin:auto;">
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <label for="nombreClub" style="color:#E0AAFF;font-weight:bold;">Nombre:</label>
+      <input id="nombreClub" type="text" maxlength="22" required value="Usuario" style="background:#240046;color:#E0AAFF;border:none;border-radius:6px;padding:6px 10px;font-weight:bold;width:60%;">
+      <button id="editNameClubBtn" style="background:#5A189A;border:none;color:#E0AAFF;border-radius:4px;padding:6px 10px;cursor:pointer;" title="Editar nombre">✏️</button>
+    </div>
+    <div id="chat-box-club" style="max-height:250px;overflow-y:auto;background:#240046;padding:10px;border-radius:5px;font-size:16px;margin-bottom:10px;"></div>
+    <form id="chat-form-club" style="display:flex;gap:7px;">
+      <input id="mensajeClub" type="text" placeholder="Escribe tu mensaje..." required maxlength="300" style="flex:1 1 60%;padding:9px 10px;border-radius:5px;border:none;background:#240046;color:#fff;font-size:16px;">
+      <button id="enviarMensajeClub" type="submit" style="padding:9px 18px;background:#E0AAFF;color:#10002B;border:none;border-radius:5px;font-weight:bold;font-size:15px;cursor:pointer;">Enviar</button>
+    </form>
+  </div>
+</div>
+  </div>
+
+<footer>
+    Desarrollado por Elkin Jair Díaz Aponte, Juan Camilo Guaca Guerrero, Ana Lucia Perdomo Salavarrieta, Deyvid Alejandro Piñeros Perilla, Juan Esteban Vergara Vega.
+
+  <!-- Modal para zoom en pantalla completa -->
+  <div id="imagenModal" class="modal" onclick="cerrarModal()">
+    <span class="close" onclick="cerrarModal()">&times;</span>
+    <img class="modal-content" id="imagenAmpliada">
+  </div>
+
+  <script>
+    function openMenu() {
+      document.getElementById("mySidebar").style.width = "250px"; // Ancho del menú desplegado
+    }
+
+    function closeMenu() {
+      document.getElementById("mySidebar").style.width = "0"; // Ocultar menú
+    }
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function buscarLibro() {
+      let input = document.getElementById("buscador").value.toLowerCase();
+      let todasLasSecciones = document.querySelectorAll(".tab-content");
+
+      todasLasSecciones.forEach(seccion => {
+        let libros = seccion.querySelectorAll(".book-item");
+        let hayCoincidencia = false;
+
+        libros.forEach(libro => {
+          let titulo = libro.querySelector("h4").textContent.toLowerCase();
+          if (titulo.includes(input)) {
+            libro.style.display = "block";
+            hayCoincidencia = true;
+          } else {
+            libro.style.display = "none";
+          }
+        });
+
+        seccion.style.display = (input === "" || hayCoincidencia) ? "block" : "none";
+      });
+    }
+
+    const frases = [
+      "El que lee mucho y anda mucho, ve mucho y sabe mucho. – Miguel de Cervantes",
+      "Un libro es un sueño que tienes en tus manos. – Neil Gaiman",
+      "Leer es soñar con los ojos abiertos. – Anónimo",
+      "Los libros son espejos: sólo ves en ellos lo que ya tienes dentro. – Carlos Ruiz Zafón",
+      "Donde se queman libros, se terminan quemando personas. – Heinrich Heine",
+      "Aprender a leer es encender un fuego; cada sílaba que se deletrea es una chispa. – Victor Hugo",
+      "La lectura es la llave del conocimiento. – Anónimo",
+      "Cada libro es un mundo esperando a ser descubierto. – Anónimo"
+    ];
+
+    function mostrarFrase() {
+      const ahora = new Date();
+      const baseTime = new Date('2024-01-01').getTime();
+      const ahoraTime = ahora.getTime();
+      const dias = Math.floor((ahoraTime - baseTime) / (1000 * 60 * 60 * 24));
+      const index = Math.floor(dias / 2) % frases.length;
+      document.getElementById("frase").textContent = frases[index];
+    }
+
+    mostrarFrase();
+
+    function ampliarImagen(imagen) {
+      const modal = document.getElementById("imagenModal");
+      const imagenAmpliada = document.getElementById("imagenAmpliada");
+      imagenAmpliada.src = imagen.src;
+      modal.style.display = "block";
+    }
+
+    function cerrarModal() {
+      document.getElementById("imagenModal").style.display = "none";
+    }
+
+    // CHAT - Firebase
+    const chatRef = db.ref("club-lectura-chat");
+    const form = document.getElementById("chat-form");
+    const chatBox = document.getElementById("chat-box");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nombre = document.getElementById("nombre").value.trim();
+      const mensaje = document.getElementById("mensaje").value.trim();
+
+      if (nombre && mensaje) {
+        const ahora = new Date().toLocaleTimeString();
+        chatRef.push({
+          nombre,
+          mensaje,
+          hora: ahora
+        });
+        form.reset();
+      }
+    });
+
+    chatRef.on("child_added", function (data) {
+      const msg = data.val();
+      const mensajeElemento = document.createElement("p");
+      mensajeElemento.innerHTML = `<strong>${msg.nombre}:</strong> ${msg.mensaje} <span style="color:#aaa;font-size:0.8em;">(${msg.hora})</span>`;
+      chatBox.appendChild(mensajeElemento);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  </script>
+<script type="module">
+  // Importar Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+  import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    FacebookAuthProvider, 
+    signInWithPopup, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  import { getDatabase } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+  // Configuración de Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDbEPwOR7cKAkXugIOVAt4sz3ZxovF7IGA",
+    authDomain: "bibliotecavirtual-fdf86.firebaseapp.com",
+    databaseURL: "https://bibliotecavirtual-fdf86-default-rtdb.firebaseio.com",
+    projectId: "bibliotecavirtual-fdf86",
+    storageBucket: "bibliotecavirtual-fdf86.appspot.com",
+    messagingSenderId: "738805068820",
+    appId: "1:738805068820:web:ac061400216def20116301",
+    measurementId: "G-2VMMKZLNSE"
+  };
+
+  // Inicializar Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // --- Iniciar sesión con correo y contraseña ---
+  async function loginEmail() {
+    const email = prompt("Correo:");
+    const password = prompt("Contraseña:");
+    if (!email || !password) {
+      alert("❌ Debes ingresar correo y contraseña");
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("✅ Sesión iniciada con correo");
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert("✅ Usuario registrado e iniciado sesión");
+        } catch (regErr) {
+          alert("❌ Error al registrar: " + regErr.message);
+        }
+      } else {
+        alert("❌ Error: " + err.message);
+      }
+    }
+  }
+
+  // --- Iniciar sesión con Google ---
+  async function loginGoogle() {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      alert("✅ Sesión iniciada con Google");
+    } catch (err) {
+      alert("❌ Error: " + err.message);
+    }
+  }
+
+  // --- Iniciar sesión con Facebook ---
+  async function loginFacebook() {
+    const provider = new FacebookAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      alert("✅ Sesión iniciada con Facebook");
+    } catch (err) {
+      alert("❌ Error: " + err.message);
+    }
+  }
+
+  // --- Cerrar sesión ---
+  async function logout() {
+    try {
+      await signOut(auth);
+      alert("👋 Sesión cerrada");
+    } catch (err) {
+      alert("❌ Error al cerrar sesión: " + err.message);
+    }
+  }
+
+  // --- Detectar estado de autenticación ---
+  onAuthStateChanged(auth, user => {
+    const loginLinks = document.getElementById("loginLinks");
+    const logoutLink = document.getElementById("logoutLink");
+    const profileLink = document.getElementById("profileLink");
+
+    if (user) {
+      if (loginLinks) loginLinks.style.display = "none";
+      if (logoutLink) logoutLink.style.display = "block";
+      if (profileLink) profileLink.style.display = "block";
+    } else {
+      if (loginLinks) loginLinks.style.display = "block";
+      if (logoutLink) logoutLink.style.display = "none";
+      if (profileLink) profileLink.style.display = "none";
+    }
+  });
+
+  // --- Exportar funciones si quieres llamarlas desde HTML ---
+  window.loginEmail = loginEmail;
+  window.loginGoogle = loginGoogle;
+  window.loginFacebook = loginFacebook;
+  window.logout = logout;
+</script>
+<script type="module">
+  import { getDatabase, ref, push, onChildAdded } 
+    from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+  import { getAuth } 
+    from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+  const db = getDatabase();
+  const auth = getAuth();
+
+  // Referencias a elementos
+  const chatFormClub = document.getElementById("chat-form-club");
+  const mensajeClubInput = document.getElementById("mensajeClub");
+  const chatBoxClub = document.getElementById("chat-box-club");
+  const nombreInput = document.getElementById("nombreClub");
+
+  // --- ENVIAR MENSAJE ---
+  chatFormClub.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+
+    const mensaje = mensajeClubInput.value.trim();
+    if (mensaje === "") return;
+
+    const user = auth.currentUser;
+    const name = nombreInput.value.trim() || "Anon";
+
+    await push(ref(db, "club-lectura-chat"), {
+      nombre: name,
+      mensaje,
+      fecha: Date.now(),
+      uid: user ? user.uid : "anon"
+    });
+
+    mensajeClubInput.value = "";
+  });
+
+  // --- ESCUCHAR MENSAJES EN TIEMPO REAL ---
+  onChildAdded(ref(db,"club-lectura-chat"), snap=>{
+    const data = snap.val();
+    const p = document.createElement("p");
+   // convertir timestamp a formato DD/MM/YYYY HH:MM
+const f = new Date(data.fecha);
+const fechaFormateada = f.toLocaleString("es-CO", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit"
+});
+
+p.innerHTML = `
+  <strong>${data.nombre}</strong>
+  <br>
+  <span style="font-size:11px; color:#777;">${fechaFormateada}</span>
+  <br>
+  ${data.mensaje}
+`;
+    chatBoxClub.appendChild(p);
+    chatBoxClub.scrollTop = chatBoxClub.scrollHeight;
+  });
+</script>
+</body>
+</html>
