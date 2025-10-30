@@ -903,8 +903,39 @@ p.innerHTML = `
     chatBoxClub.scrollTop = chatBoxClub.scrollHeight;
   });
 </script>
+  <h2>🎧 Audiolibros</h2>
+
+<div class="audiolibro">
+  <img src="imagenes/ventana.jpg" alt="A través de mi ventana" width="120">
+  <h3>A través de mi ventana</h3>
+  <button onclick="reproducirAudiolibro('libros/a_traves_de_mi_ventana.pdf')">▶️ Reproducir</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<script>
+async function reproducirAudiolibro(rutaPDF) {
+  const loadingTask = pdfjsLib.getDocument(rutaPDF);
+  const pdf = await loadingTask.promise;
+
+  let textoCompleto = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const pagina = await pdf.getPage(i);
+    const texto = await pagina.getTextContent();
+    textoCompleto += texto.items.map(item => item.str).join(' ') + ' ';
+  }
+
+  const voz = new SpeechSynthesisUtterance(textoCompleto);
+  voz.lang = 'es-ES';
+  voz.rate = 1;
+  voz.pitch = 1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(voz);
+}
+</script>
 </body>
 </html>
+
 
 
 
