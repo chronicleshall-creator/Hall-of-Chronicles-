@@ -221,8 +221,6 @@
 </head>
 <body>
   <header>
-   <!-- Botón hamburguesa dentro del header -->
-    <button class="menu-btn" onclick="openMenu()"></button>
 
     <img src="imagenes de libros/unnamed.jpg" alt="Logo Biblioteca" />
     <h1>Biblioteca Virtual</h1>
@@ -230,17 +228,6 @@
       <input type="text" id="buscador" placeholder="🔍 Buscar Libro..." onkeyup="buscarLibro()">
     </div>
   </header>
-
-    <div id="loginLinks">
-      <a href="javascript:void(0)" onclick="loginEmail()">📧 Iniciar con Correo</a>
-      <a href="javascript:void(0)" onclick="loginGoogle()">🔵 Iniciar con Google</a>
-      <a href="javascript:void(0)" onclick="loginFacebook()">🔷 Iniciar con Facebook</a>
-    </div>
-
-    <a href="javascript:void(0)" id="logoutLink" onclick="logout()" style="display:none;">🚪 Cerrar Sesión</a>
-    <a href="profile.html" id="profileLink" style="display:none;">👤 Mi Perfil</a>
-    <a href="#" onclick="showTab('recomendaciones')">💬 Recomendaciones</a>
-  </div>
 
   <nav>
     <button onclick="showTab('inicio')">Inicio</button>
@@ -1094,6 +1081,7 @@ p.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
